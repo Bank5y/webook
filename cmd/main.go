@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -30,7 +30,15 @@ func initWebServer() *gin.Engine {
 	server.Use(newCors())
 
 	//session处理
-	store := cookie.NewStore([]byte("secret"))
+	//store := cookie.NewStore([]byte("secret"))
+	//store := memstore.NewStore([]byte("tbkykLFqpai8IwdLt9N20HfAsFZoK1uA"), []byte("Gv08GPb5tXIjrtQ8m2cwAVukIkUkDBLG"))
+	//size:最大空闲连接数 network:tcp协议 address:链接学习 password:密码
+	store, err := redis.NewStore(16, "tcp", "localhost:6379", "",
+		[]byte("tbkykLFqpai8IwdLt9N20HfAsFZoK1uA"), []byte("Gv08GPb5tXIjrtQ8m2cwAVukIkUkDBLG"))
+	if err != nil {
+		panic(err)
+	}
+
 	server.Use(sessions.Sessions("mySessions", store))
 
 	//验证登录状态

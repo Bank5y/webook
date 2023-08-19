@@ -6,6 +6,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
 	"webook/internal/domain"
 	"webook/internal/repository/dao"
 	"webook/internal/service"
@@ -115,9 +116,6 @@ func (u *UserHandler) Login(ctx *gin.Context) {
 		Email:    req.Email,
 		Password: req.Password,
 	})
-	if err != nil {
-		return
-	}
 
 	if errors.Is(err, service.ErrUserNotFind) {
 		ctx.String(http.StatusOK, "用户名或密码错误！")
@@ -130,14 +128,60 @@ func (u *UserHandler) Login(ctx *gin.Context) {
 
 	//设置session
 	sess := sessions.Default(ctx)
+	sess.Options(sessions.Options{
+		Secure:   true,
+		HttpOnly: true,
+		MaxAge:   30,
+	})
 	sess.Set("LoginSess", result.Email)
 	err = sess.Save()
 	if err != nil {
 		return
 	}
 
+	//登录状态刷新
+	//登录未刷新过
+	updateTime := sess.Get("update_time")
+	sess.Options(sessions.Options{
+		Secure:   true,
+		HttpOnly: true,
+		MaxAge:   30,
+	})
+	sess.Set("LoginSess", result.Email)
+
+	now := time.Now().UnixMilli()
+	if updateTime == nil {
+		sess.Set("update_time", now)
+		sess.Save()
+	}
+
+	//已经刷新过
+	updateTimeVal, ok := updateTime.(int64)
+	if !ok {
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+	}
+
+	if now-updateTimeVal > 10*1000 {
+		sess.Set("update_time", now)
+		sess.Save()
+	}
+
 	ctx.String(http.StatusOK, "登录成功！")
 	return
+}
+
+// LogOut 登出
+func (u *UserHandler) LogOut(ctx *gin.Context) {
+	//设置session
+	sess := sessions.Default(ctx)
+	sess.Options(sessions.Options{
+		MaxAge: -1,
+	})
+	err := sess.Save()
+	if err != nil {
+		return
+	}
+	ctx.String(http.StatusOK, "退出登录成功")
 }
 
 // Edit 更新信息
