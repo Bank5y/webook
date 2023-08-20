@@ -24,6 +24,7 @@ func main() {
 	server.Run(":8080")
 }
 
+// 初始化中间件
 func initWebServer() *gin.Engine {
 	server := gin.Default()
 	//跨域处理
@@ -42,11 +43,13 @@ func initWebServer() *gin.Engine {
 	server.Use(sessions.Sessions("mySessions", store))
 
 	//验证登录状态
-	server.Use(
-		middleware.NewLoginMiddlewareBuilder().
-			Ignore("/users/login").
-			Ignore("/users/signup").
-			Build())
+	//server.Use(middleware.NewLoginMiddlewareBuilder().
+	//	Ignore("/users/login").
+	//	Ignore("/users/signup").
+	//	Build())
+	server.Use(middleware.NewLoginJWTMiddlewareBuilder().
+		Ignore("/users/login").
+		Ignore("/users/signup").Build())
 
 	return server
 }
@@ -54,7 +57,10 @@ func initWebServer() *gin.Engine {
 // 跨域中间件
 func newCors() gin.HandlerFunc {
 	return cors.New(cors.Config{
-		AllowOrigins:     []string{"https://localhost"},
+		AllowOrigins: []string{"https://localhost"},
+		//传递信息跨域
+		ExposeHeaders:    []string{"jwt-token"},
+		AllowHeaders:     []string{"Authorization"},
 		AllowCredentials: true,
 	})
 }

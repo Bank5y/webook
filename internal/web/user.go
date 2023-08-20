@@ -2,11 +2,12 @@ package web
 
 import (
 	"errors"
+	"fmt"
 	"github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"net/http"
-	"time"
 	"webook/internal/domain"
 	"webook/internal/repository/dao"
 	"webook/internal/service"
@@ -38,7 +39,7 @@ func NewUserHandler(userServer *service.UserService) *UserHandler {
 func (u *UserHandler) RegisterRouter(server *gin.Engine) {
 	userRouter := server.Group("/users")
 	userRouter.POST("/signup", u.SignUp)
-	userRouter.POST("/login", u.Login)
+	userRouter.POST("/login", u.LoginJWT)
 	userRouter.PUT("/edit", u.Edit)
 	userRouter.GET("/profile", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "你看到了。。。")
@@ -129,9 +130,7 @@ func (u *UserHandler) Login(ctx *gin.Context) {
 	//设置session
 	sess := sessions.Default(ctx)
 	sess.Options(sessions.Options{
-		Secure:   true,
-		HttpOnly: true,
-		MaxAge:   30,
+		MaxAge: 10,
 	})
 	sess.Set("LoginSess", result.Email)
 	err = sess.Save()
@@ -139,33 +138,41 @@ func (u *UserHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	//登录状态刷新
-	//登录未刷新过
-	updateTime := sess.Get("update_time")
-	sess.Options(sessions.Options{
-		Secure:   true,
-		HttpOnly: true,
-		MaxAge:   30,
+	ctx.String(http.StatusOK, "登录成功！")
+	return
+}
+
+// LoginJWT JWT登录
+func (u *UserHandler) LoginJWT(ctx *gin.Context) {
+	type UserReq struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	var req UserReq
+	err := ctx.Bind(&req)
+	if err != nil {
+		return
+	}
+
+	result, err := u.svc.Login(ctx.Request.Context(), domain.User{
+		Email:    req.Email,
+		Password: req.Password,
 	})
-	sess.Set("LoginSess", result.Email)
 
-	now := time.Now().UnixMilli()
-	if updateTime == nil {
-		sess.Set("update_time", now)
-		sess.Save()
+	if errors.Is(err, service.ErrUserNotFind) {
+		ctx.String(http.StatusOK, "用户名或密码错误！")
+		return
+	}
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误")
+		return
 	}
 
-	//已经刷新过
-	updateTimeVal, ok := updateTime.(int64)
-	if !ok {
-		ctx.AbortWithStatus(http.StatusInternalServerError)
-	}
-
-	if now-updateTimeVal > 10*1000 {
-		sess.Set("update_time", now)
-		sess.Save()
-	}
-
+	token := jwt.New(jwt.SigningMethodHS512)
+	jwtToken, _ := token.SignedString([]byte("tbkykLFqpai8IwdLt9N20HfAsFZoK1uA"))
+	ctx.Header("jwt-token", jwtToken)
+	fmt.Printf("%v\n", result)
 	ctx.String(http.StatusOK, "登录成功！")
 	return
 }
