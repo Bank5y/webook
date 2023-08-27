@@ -41,10 +41,30 @@ func (u *UserHandler) RegisterRouter(server *gin.Engine) {
 	userRouter.POST("/signup", u.SignUp)
 	userRouter.POST("/login", u.LoginJWT)
 	userRouter.PUT("/edit", u.Edit)
-	userRouter.GET("/profile", func(ctx *gin.Context) {
-		ctx.String(http.StatusOK, "你看到了。。。")
-	})
+	userRouter.GET("/profile", u.ProfileJWT)
 
+}
+
+// Profile 测试权限信息
+func (u *UserHandler) Profile(ctx *gin.Context) {
+	ctx.String(http.StatusOK, "你看到了。。。")
+}
+
+// ProfileJWT 测试权限信息
+func (u *UserHandler) ProfileJWT(ctx *gin.Context) {
+	//可以断言必然有claims
+	c, ok := ctx.Get("claims")
+	if !ok {
+		//可以考虑监控住这里
+		ctx.String(http.StatusOK, "系统错误")
+
+	}
+	claims, ok := c.(*UserClaims)
+	if !ok {
+		ctx.String(http.StatusOK, "系统错误")
+	}
+
+	ctx.String(http.StatusOK, fmt.Sprintf("%s看到了。。。", claims.Email))
 }
 
 // SignUp 注册
@@ -169,9 +189,14 @@ func (u *UserHandler) LoginJWT(ctx *gin.Context) {
 		return
 	}
 
-	token := jwt.New(jwt.SigningMethodHS512)
+	//
+	claims := UserClaims{
+		Email: req.Email,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 	jwtToken, _ := token.SignedString([]byte("tbkykLFqpai8IwdLt9N20HfAsFZoK1uA"))
-	ctx.Header("jwt-token", jwtToken)
+	ctx.Header("X-jwt-token", jwtToken)
 	fmt.Printf("%v\n", result)
 	ctx.String(http.StatusOK, "登录成功！")
 	return
@@ -232,4 +257,10 @@ func (u *UserHandler) Edit(ctx *gin.Context) {
 
 	ctx.String(http.StatusOK, "修改成功！")
 	return
+}
+
+type UserClaims struct {
+	jwt.RegisteredClaims
+	//自定义存入token的字段
+	Email string
 }

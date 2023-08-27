@@ -5,6 +5,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"strings"
+	"webook/internal/web"
 )
 
 // LoginJWTMiddlewareBuilder JWT 登录校验
@@ -33,13 +34,14 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		segs := strings.Split(tokenHeader, " ")
-		if len(segs) != 2 {
+		tokens := strings.Split(tokenHeader, " ")
+		if len(tokens) != 2 {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		tokenStr := segs[1]
-		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		tokenStr := tokens[1]
+		claims := &web.UserClaims{}
+		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 			return []byte("tbkykLFqpai8IwdLt9N20HfAsFZoK1uA"), nil
 		})
 		if err != nil {
@@ -50,5 +52,7 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+
+		ctx.Set("claims", claims)
 	}
 }
