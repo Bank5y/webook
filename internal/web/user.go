@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
+	"time"
 	"webook/internal/domain"
 	"webook/internal/repository/dao"
 	"webook/internal/service"
@@ -189,13 +190,16 @@ func (u *UserHandler) LoginJWT(ctx *gin.Context) {
 		return
 	}
 
-	//
 	claims := UserClaims{
-		Email: req.Email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
+		},
+		Email:     req.Email,
+		UserAgent: ctx.Request.UserAgent(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
-	jwtToken, _ := token.SignedString([]byte("tbkykLFqpai8IwdLt9N20HfAsFZoK1uA"))
+	jwtToken, _ := token.SignedString([]byte("tbkykLFqpai8IwdLt9N20HfAs FZoK1uA"))
 	ctx.Header("X-jwt-token", jwtToken)
 	fmt.Printf("%v\n", result)
 	ctx.String(http.StatusOK, "登录成功！")
@@ -262,5 +266,6 @@ func (u *UserHandler) Edit(ctx *gin.Context) {
 type UserClaims struct {
 	jwt.RegisteredClaims
 	//自定义存入token的字段
-	Email string
+	Email     string
+	UserAgent string
 }
