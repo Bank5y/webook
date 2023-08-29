@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"net/http"
 	"webook/internal/repository"
 	"webook/internal/repository/dao"
 	"webook/internal/service"
@@ -15,12 +16,18 @@ import (
 )
 
 func main() {
-	db := initDB()
-	server := initWebServer()
 
-	u := initUser(db)
-	u.RegisterRouter(server)
+	/*
+		db := initDB()
+		server := initWebServer()
 
+		u := initUser(db)
+		u.RegisterRouter(server)
+	*/
+	server := gin.Default()
+	server.GET("/hello", func(context *gin.Context) {
+		context.String(http.StatusOK, "hello,")
+	})
 	server.Run(":8080")
 }
 
