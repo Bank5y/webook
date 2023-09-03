@@ -199,7 +199,7 @@ func (u *UserHandler) LoginJWT(ctx *gin.Context) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
-	jwtToken, _ := token.SignedString([]byte("tbkykLFqpai8IwdLt9N20HfAs FZoK1uA"))
+	jwtToken, _ := token.SignedString([]byte("tbkykLFqpai8IwdLt9N20HfAsFZoK1uA"))
 	ctx.Header("X-jwt-token", jwtToken)
 	fmt.Printf("%v\n", result)
 	ctx.String(http.StatusOK, "登录成功！")

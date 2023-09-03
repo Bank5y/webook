@@ -1,0 +1,13 @@
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+#  mysql需要使用的
+  name: webook-mysql-claim
+spec:
+  storageClassName: claim
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi

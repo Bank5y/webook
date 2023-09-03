@@ -3,30 +3,31 @@ package main
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/redis"
+	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"net/http"
+	"time"
 	"webook/internal/repository"
 	"webook/internal/repository/dao"
 	"webook/internal/service"
 	"webook/internal/web"
 	"webook/internal/web/middleware"
+	"webook/pkg/ginx/middleware/ratelimit"
 )
 
 func main() {
 
-	/*
-		db := initDB()
-		server := initWebServer()
+	db := initDB()
+	server := initWebServer()
 
-		u := initUser(db)
-		u.RegisterRouter(server)
-	*/
-	server := gin.Default()
-	server.GET("/hello", func(context *gin.Context) {
-		context.String(http.StatusOK, "hello,")
+	u := initUser(db)
+	u.RegisterRouter(server)
+	//server := gin.Default()
+	server.GET("/hello", func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, "hello")
 	})
 	server.Run(":8080")
 }
@@ -34,6 +35,13 @@ func main() {
 // 初始化中间件
 func initWebServer() *gin.Engine {
 	server := gin.Default()
+
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: "webook-redis:11479",
+		//Addr: "localhost:6379",
+	})
+	server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
+
 	//跨域处理
 	server.Use(newCors())
 
@@ -41,11 +49,8 @@ func initWebServer() *gin.Engine {
 	//store := cookie.NewStore([]byte("secret"))
 	//store := memstore.NewStore([]byte("tbkykLFqpai8IwdLt9N20HfAsFZoK1uA"), []byte("Gv08GPb5tXIjrtQ8m2cwAVukIkUkDBLG"))
 	//size:最大空闲连接数 network:tcp协议 address:链接学习 password:密码
-	store, err := redis.NewStore(16, "tcp", "localhost:6379", "",
+	store := memstore.NewStore(
 		[]byte("tbkykLFqpai8IwdLt9N20HfAsFZoK1uA"), []byte("Gv08GPb5tXIjrtQ8m2cwAVukIkUkDBLG"))
-	if err != nil {
-		panic(err)
-	}
 
 	server.Use(sessions.Sessions("mySessions", store))
 
@@ -76,7 +81,10 @@ func newCors() gin.HandlerFunc {
 func initDB() *gorm.DB {
 
 	//尝试链接数据库
-	db, err := gorm.Open(mysql.Open("root:root@tcp(localhost:13316)/webook"))
+	db, err := gorm.Open(mysql.Open(
+		//"root:root@tcp(localhost:13316)/webook",
+		"root:root@tcp(webook-mysql:3310)/webook",
+	))
 	if err != nil {
 		//panic相当于整个goroutine结束
 		//整个goroutine结束

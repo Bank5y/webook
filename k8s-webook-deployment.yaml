@@ -1,0 +1,26 @@
+#声明配置
+apiVersion: apps/v1
+#声明配置的为Deployment
+kind: Deployment
+metadata:
+#  为一个Deployment
+  name: webook
+#  specification
+spec:
+#  副本数量
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webook
+#  用于描述pod
+  template:
+    metadata:
+      labels:
+        app: webook
+#   POD的具体信息
+    spec:
+      containers:
+        - name: webook
+          image: mokou/webook:v0.0.1
+          ports:
+            - containerPort: 8080
