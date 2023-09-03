@@ -1,6 +1,9 @@
 .PHONY: docker
 docker:
-	@if exist webook (del webook)
-	@SET GOOS=linux&&SET GOARCH=arm&&go build -tags=k8s -o webook ./cmd/
-	@docker rmi -f mokou/webook:v0.0.1 || true
-	@docker build -t mokou/webook:v0.0.1 .
+	@cd cmd
+	@rm webook || true
+	@set GOOS=linux
+	@set GOARCH=arm
+	@go build -o webook .
+	@docker rmi -t flycash/webook:v0.0.1 .
+	@docker build -t flycash/webook:v0.0.1 .
