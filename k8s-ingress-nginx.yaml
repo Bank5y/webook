@@ -12,6 +12,6 @@ spec:
               service:
                 name: webook
                 port:
-                  number: 80
+                  number: 8081
             path: /
             pathType: Prefix

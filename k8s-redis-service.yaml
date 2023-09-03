@@ -7,7 +7,7 @@ spec:
     app: webook-redis
   ports:
     - protocol: TCP
-      port: 11479
+      port: 6380
       targetPort: 6379
       nodePort: 30003
   type: NodePort

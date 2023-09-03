@@ -8,7 +8,7 @@ spec:
   ports:
     - protocol: TCP
 #      外部访问端口
-      port: 3310
+      port: 3308
       nodePort: 30002
       targetPort: 3306
   type: NodePort

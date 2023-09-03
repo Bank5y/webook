@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"time"
+	"webook/config"
 	"webook/internal/repository"
 	"webook/internal/repository/dao"
 	"webook/internal/service"
@@ -37,7 +38,7 @@ func initWebServer() *gin.Engine {
 	server := gin.Default()
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: "webook-redis:11479",
+		Addr: config.Config.Redis.Addr,
 		//Addr: "localhost:6379",
 	})
 	server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
@@ -81,10 +82,7 @@ func newCors() gin.HandlerFunc {
 func initDB() *gorm.DB {
 
 	//尝试链接数据库
-	db, err := gorm.Open(mysql.Open(
-		//"root:root@tcp(localhost:13316)/webook",
-		"root:root@tcp(webook-mysql:3310)/webook",
-	))
+	db, err := gorm.Open(mysql.Open(config.Config.DB.DSN))
 	if err != nil {
 		//panic相当于整个goroutine结束
 		//整个goroutine结束
