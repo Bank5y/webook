@@ -2,12 +2,14 @@ package repository
 
 import (
 	"context"
+	"github.com/redis/go-redis/v9"
 	"webook/internal/domain"
 	"webook/internal/repository/dao"
 )
 
 type UserRepository struct {
-	dao *dao.UserDAO
+	dao   *dao.UserDAO
+	redis *redis.Client
 }
 
 var (
@@ -24,6 +26,7 @@ func (r *UserRepository) Create(ctx context.Context, user domain.User) error {
 		Password: user.Password,
 	})
 }
+
 func (r *UserRepository) FindById(ctx context.Context, user domain.User) error {
 	//先从cache找
 	//再从dao里面找

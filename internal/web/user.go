@@ -194,14 +194,13 @@ func (u *UserHandler) LoginJWT(ctx *gin.Context) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
 		},
-		Email:     req.Email,
+		Email:     result.Email,
 		UserAgent: ctx.Request.UserAgent(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 	jwtToken, _ := token.SignedString([]byte("tbkykLFqpai8IwdLt9N20HfAs FZoK1uA"))
 	ctx.Header("X-jwt-token", jwtToken)
-	fmt.Printf("%v\n", result)
 	ctx.String(http.StatusOK, "登录成功！")
 	return
 }
