@@ -9,7 +9,7 @@ services:
     volumes:
       - ./script/mysql/:/docker-entrypoint-initdb.d/
     ports:
-      - "13316:3306"
+      - "3309:3306"
   redis:
     image: 'bitnami/redis:latest'
     environment:

@@ -9,5 +9,4 @@ spec:
   accessModes:
     - ReadWriteMany
   hostPath:
-    path: "/mnt/live"
-  
+    path: "/run/desktop/mnt/host/d/PV/webook"
