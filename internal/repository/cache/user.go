@@ -53,5 +53,5 @@ func (cache *UserCache) Set(ctx context.Context, u domain.User) error {
 }
 
 func (cache *UserCache) key(id int) string {
-	return fmt.Sprintf("user:info:%s", id)
+	return fmt.Sprintf("user:info:%d", id)
 }
