@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
@@ -44,6 +45,18 @@ func (u *UserDAO) FindByEmail(ctx context.Context, email string) (User, error) {
 	return result, err
 }
 
+func (u *UserDAO) FindByPhone(ctx context.Context, phone string) (User, error) {
+	var result User
+	err := u.db.WithContext(ctx).Where("phone=?", phone).First(&result).Error
+	return result, err
+}
+
+func (u *UserDAO) FindById(ctx context.Context, id int) (User, error) {
+	var result User
+	err := u.db.WithContext(ctx).Where("id=?", id).First(&result).Error
+	return result, err
+}
+
 func (u *UserDAO) Update(ctx context.Context, user User) error {
 	//更新Ctime Utime
 	now := time.Now().UnixMilli()
@@ -55,9 +68,11 @@ func (u *UserDAO) Update(ctx context.Context, user User) error {
 
 // User 直接对应数据库表
 type User struct {
-	id       int64  `gorm:"primaryKey,autoIncrement"`
-	Email    string `gorm:"unique"`
+	Id       int            `gorm:"primaryKey,autoIncrement"`
+	Email    sql.NullString `gorm:"unique"`
 	Password string
+	//允许多个空值的唯一索引
+	Phone sql.NullString `gorm:"unique"`
 
 	//Create time ms
 	Ctime int64

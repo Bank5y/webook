@@ -8,40 +8,41 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"net/http"
-	"time"
 	"webook/config"
 	"webook/internal/repository"
+	"webook/internal/repository/cache"
 	"webook/internal/repository/dao"
 	"webook/internal/service"
+	"webook/internal/service/sms/memory"
 	"webook/internal/web"
 	"webook/internal/web/middleware"
-	"webook/pkg/ginx/middleware/ratelimit"
 )
 
 func main() {
-
+	//初始化数据库
 	db := initDB()
+	//初始化Redis缓存
+	rdb := initRedis()
+
+	//初始化http服务器
 	server := initWebServer()
 
-	u := initUser(db)
+	//初始化注册handler
+	u := initUser(db, rdb)
 	u.RegisterRouter(server)
 
-	server.GET("/hello", func(context *gin.Context) {
-		context.String(http.StatusOK, "hello")
-	})
-	server.Run(":8080")
+	server.Run(":8186")
 }
 
 // 初始化中间件
 func initWebServer() *gin.Engine {
 	server := gin.Default()
 
-	//限流处理
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: config.Config.Redis.Addr,
-	})
-	server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
+	////限流处理
+	//redisClient := redis.NewClient(&redis.Options{
+	//	Addr: config.Config.Redis.Addr,
+	//})
+	//server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
 
 	//跨域处理
 	server.Use(newCors())
@@ -65,6 +66,8 @@ func initWebServer() *gin.Engine {
 	//	Build())
 	server.Use(middleware.NewLoginJWTMiddlewareBuilder().
 		Ignore("/users/login").
+		Ignore("/users/login_sms/code/send").
+		Ignore("/users/login_sms").
 		Ignore("/users/signup").Build())
 
 	return server
@@ -99,12 +102,25 @@ func initDB() *gorm.DB {
 	return db
 }
 
+// 初始化Redis缓存
+func initRedis() redis.Cmdable {
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: config.Config.Redis.Addr,
+	})
+	return redisClient
+}
+
 // 初始化UserHandler
-func initUser(db *gorm.DB) *web.UserHandler {
+func initUser(db *gorm.DB, rdb redis.Cmdable) *web.UserHandler {
 
 	ud := dao.NewUserDao(db)
-	repo := repository.NewUserRepository(ud)
+	uc := cache.NewUserCache(rdb)
+	repo := repository.NewUserRepository(ud, uc)
 	svc := service.NewUserService(repo)
-	u := web.NewUserHandler(svc)
+	codeCache := cache.NewCodeCache(rdb)
+	codeRepo := repository.NewCodeRepository(codeCache)
+	smsSvc := memory.NewService()
+	cs := service.NewCodeService(smsSvc, codeRepo)
+	u := web.NewUserHandler(svc, cs)
 	return u
 }

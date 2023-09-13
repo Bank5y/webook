@@ -45,7 +45,7 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 		tokenStr := tokens[1]
 		claims := &web.UserClaims{}
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-			return []byte("tbkykLFqpai8IwdLt9N20HfAsFZoK1uA"), nil
+			return []byte(web.JwtTokenKey), nil
 		})
 		if err != nil {
 			ctx.AbortWithStatus(http.StatusUnauthorized)

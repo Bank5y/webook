@@ -49,6 +49,22 @@ func (svc *UserService) Login(ctx context.Context, u domain.User) (domain.User, 
 	return result, err
 }
 
+func (svc *UserService) FindOrCreate(ctx context.Context, u domain.User) (domain.User, error) {
+	//快路径
+	uResult, err := svc.repo.FindByPhone(ctx, u)
+	if err != ErrUserNotFind {
+		return uResult, err
+	}
+	err = svc.repo.Create(ctx, domain.User{
+		Phone: u.Phone,
+	})
+	if err != nil {
+		return domain.User{}, err
+	}
+	user, err := svc.repo.FindByPhone(ctx, u)
+	return user, err
+}
+
 func (svc *UserService) EditUserPassword(ctx context.Context, u domain.User) error {
 	password, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -60,4 +76,9 @@ func (svc *UserService) EditUserPassword(ctx context.Context, u domain.User) err
 		return err
 	}
 	return err
+}
+
+func (svc *UserService) Profile(ctx context.Context, u domain.User) (domain.User, error) {
+	user, err := svc.repo.FindById(ctx, u)
+	return user, err
 }
