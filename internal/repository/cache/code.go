@@ -43,7 +43,8 @@ type CodeLocalCache struct {
 	CacheMap map[string]LocalCode
 }
 
-func NewCodeLocalCache() *CodeLocalCache {
+// NewCodeLocalCache 本地缓存
+func NewCodeLocalCache() CodeCache {
 	return &CodeLocalCache{
 		CacheMap: make(map[string]LocalCode, 10000),
 	}
@@ -97,7 +98,7 @@ type CodeRedisCache struct {
 	client redis.Cmdable
 }
 
-func NewCodeRedisCache(client redis.Cmdable) *CodeRedisCache {
+func NewCodeRedisCache(client redis.Cmdable) CodeCache {
 	return &CodeRedisCache{
 		client: client,
 	}

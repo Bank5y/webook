@@ -19,13 +19,13 @@ const (
 )
 
 type UserHandler struct {
-	svc         *service.UserService
-	codeSvc     *service.CodeService
+	svc         service.UserService
+	codeSvc     service.CodeService
 	emailExp    *regexp2.Regexp
 	passwordExp *regexp2.Regexp
 }
 
-func NewUserHandler(userServer *service.UserService, codeSvc *service.CodeService) *UserHandler {
+func NewUserHandler(userServer service.UserService, codeSvc service.CodeService) *UserHandler {
 	const (
 		//email regex
 		emailRegexPattern = `^[A-Za-z0-9\u4e00-\u9fa5]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$`

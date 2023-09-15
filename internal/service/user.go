@@ -8,8 +8,16 @@ import (
 	"webook/internal/repository"
 )
 
-type UserService struct {
-	repo *repository.UserRepository
+type UserService interface {
+	SignUp(ctx context.Context, u domain.User) error
+	Login(ctx context.Context, u domain.User) (domain.User, error)
+	FindOrCreate(ctx context.Context, u domain.User) (domain.User, error)
+	EditUserPassword(ctx context.Context, u domain.User) error
+	Profile(ctx context.Context, u domain.User) (domain.User, error)
+}
+
+type UserDevService struct {
+	repo repository.UserRepository
 }
 
 var (
@@ -17,11 +25,11 @@ var (
 	ErrUserNotFind           = repository.ErrUserNotFind
 )
 
-func NewUserService(userRepository *repository.UserRepository) *UserService {
-	return &UserService{repo: userRepository}
+func NewUserDevService(userRepository repository.UserRepository) UserService {
+	return &UserDevService{repo: userRepository}
 }
 
-func (svc *UserService) SignUp(ctx context.Context, u domain.User) error {
+func (svc *UserDevService) SignUp(ctx context.Context, u domain.User) error {
 	//加密
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -32,7 +40,7 @@ func (svc *UserService) SignUp(ctx context.Context, u domain.User) error {
 	return svc.repo.Create(ctx, u)
 }
 
-func (svc *UserService) Login(ctx context.Context, u domain.User) (domain.User, error) {
+func (svc *UserDevService) Login(ctx context.Context, u domain.User) (domain.User, error) {
 	result, err := svc.repo.FindByEmail(ctx, u)
 	if err != nil {
 		return result, err
@@ -49,7 +57,7 @@ func (svc *UserService) Login(ctx context.Context, u domain.User) (domain.User, 
 	return result, err
 }
 
-func (svc *UserService) FindOrCreate(ctx context.Context, u domain.User) (domain.User, error) {
+func (svc *UserDevService) FindOrCreate(ctx context.Context, u domain.User) (domain.User, error) {
 	//快路径
 	uResult, err := svc.repo.FindByPhone(ctx, u)
 	if err != ErrUserNotFind {
@@ -65,7 +73,7 @@ func (svc *UserService) FindOrCreate(ctx context.Context, u domain.User) (domain
 	return user, err
 }
 
-func (svc *UserService) EditUserPassword(ctx context.Context, u domain.User) error {
+func (svc *UserDevService) EditUserPassword(ctx context.Context, u domain.User) error {
 	password, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -78,7 +86,7 @@ func (svc *UserService) EditUserPassword(ctx context.Context, u domain.User) err
 	return err
 }
 
-func (svc *UserService) Profile(ctx context.Context, u domain.User) (domain.User, error) {
+func (svc *UserDevService) Profile(ctx context.Context, u domain.User) (domain.User, error) {
 	user, err := svc.repo.FindById(ctx, u)
 	return user, err
 }

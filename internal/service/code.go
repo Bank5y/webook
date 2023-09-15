@@ -15,17 +15,23 @@ var (
 	ErrCodeSendTooMany = repository.ErrCodeSendTooMany
 )
 
-type CodeService struct {
-	smsSvc sms.Service
-	repo   *repository.CodeRepository
+type CodeService interface {
+	Send(ctx context.Context, biz string, phone string) error
+	Verify(ctx context.Context, biz string, phone string, inputCode string) (bool, error)
+	generateCode() string
 }
 
-func NewCodeService(smsSvc sms.Service, repo *repository.CodeRepository) *CodeService {
-	return &CodeService{smsSvc: smsSvc, repo: repo}
+type CodeDevService struct {
+	smsSvc sms.Service
+	repo   repository.CodeRepository
+}
+
+func NewCodeDevService(smsSvc sms.Service, repo repository.CodeRepository) CodeService {
+	return &CodeDevService{smsSvc: smsSvc, repo: repo}
 }
 
 // Send 发送验证码
-func (svc *CodeService) Send(ctx context.Context, biz string, phone string) error {
+func (svc *CodeDevService) Send(ctx context.Context, biz string, phone string) error {
 
 	//两个步骤
 	//1.生成一个验证码
@@ -46,11 +52,11 @@ func (svc *CodeService) Send(ctx context.Context, biz string, phone string) erro
 	return err
 }
 
-func (svc *CodeService) Verify(ctx context.Context, biz string, phone string, inputCode string) (bool, error) {
+func (svc *CodeDevService) Verify(ctx context.Context, biz string, phone string, inputCode string) (bool, error) {
 	return svc.repo.Verify(ctx, biz, phone, inputCode)
 }
 
-func (svc *CodeService) generateCode() string {
+func (svc *CodeDevService) generateCode() string {
 	num := rand.Intn(1000000)
 	return fmt.Sprintf("%06d", num)
 }
