@@ -21,11 +21,13 @@ func InitWebServer() *gin.Engine {
 		cache.NewCodeLocalCache, cache.NewUserRedisCache, dao.NewUserDao,
 		//repo
 		wire.NewSet(repository.NewCodeCacheRepository, repository.NewUserCacheRepository,
+			//绑定repo接口
 			wire.Bind(new(repository.CodeRepository), new(*repository.CodeCacheRepository)),
 			wire.Bind(new(repository.UserRepository), new(*repository.UserCacheRepository)),
 		),
 		//service
 		wire.NewSet(service.NewCodeDevService, service.NewUserDevService,
+			//绑定service接口
 			wire.Bind(new(service.CodeService), new(*service.CodeDevService)),
 			wire.Bind(new(service.UserService), new(*service.UserDevService)),
 		),
