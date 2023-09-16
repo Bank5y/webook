@@ -26,7 +26,7 @@ type CodeDevService struct {
 	repo   repository.CodeRepository
 }
 
-func NewCodeDevService(smsSvc sms.Service, repo repository.CodeRepository) CodeService {
+func NewCodeDevService(smsSvc sms.Service, repo repository.CodeRepository) *CodeDevService {
 	return &CodeDevService{smsSvc: smsSvc, repo: repo}
 }
 

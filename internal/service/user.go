@@ -25,7 +25,7 @@ var (
 	ErrUserNotFind           = repository.ErrUserNotFind
 )
 
-func NewUserDevService(userRepository repository.UserRepository) UserService {
+func NewUserDevService(userRepository repository.UserRepository) *UserDevService {
 	return &UserDevService{repo: userRepository}
 }
 

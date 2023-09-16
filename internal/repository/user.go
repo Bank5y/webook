@@ -25,7 +25,7 @@ var (
 	ErrUserNotFind = dao.ErrUserNotFind
 )
 
-func NewUserCacheRepository(dao *dao.UserDAO, userCache cache.UserCache) UserRepository {
+func NewUserCacheRepository(dao *dao.UserDAO, userCache cache.UserCache) *UserCacheRepository {
 	return &UserCacheRepository{
 		dao:   dao,
 		cache: userCache,
