@@ -66,17 +66,3 @@ func (mr *MockCodeServiceMockRecorder) Verify(ctx, biz, phone, inputCode any) *g
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Verify", reflect.TypeOf((*MockCodeService)(nil).Verify), ctx, biz, phone, inputCode)
 }
-
-// generateCode mocks base method.
-func (m *MockCodeService) generateCode() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "generateCode")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// generateCode indicates an expected call of generateCode.
-func (mr *MockCodeServiceMockRecorder) generateCode() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "generateCode", reflect.TypeOf((*MockCodeService)(nil).generateCode))
-}

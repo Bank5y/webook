@@ -229,7 +229,6 @@ func (u *UserHandler) LoginSMS(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, Result{
 			Code: "510002",
 			Msg:  "验证失败",
-			Data: nil,
 		})
 		return
 	}
@@ -239,7 +238,6 @@ func (u *UserHandler) LoginSMS(ctx *gin.Context) {
 	if err != nil {
 		return
 	}
-	println(user.Id)
 	err = u.setJWTToken(ctx, user.Id)
 	if err != nil {
 		return
@@ -247,7 +245,6 @@ func (u *UserHandler) LoginSMS(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, Result{
 		Code: "510002",
 		Msg:  "验证成功",
-		Data: nil,
 	})
 	return
 }
