@@ -20,7 +20,7 @@ func NewTimeoutFailoverSMSService(cnt int32, svcs []sms.Service) *TimeoutFailove
 
 func (t *TimeoutFailoverSMSService) Send(ctx context.Context, tpl string, args []string, numbers ...string) error {
 	idx := atomic.LoadInt32(&t.idx)
-	cnt := atomic.LoadInt32(&t.idx)
+	cnt := atomic.LoadInt32(&t.cnt)
 	if cnt > t.threshold {
 		//新下标
 		newIdx := (idx + 1) % int32(len(t.svcs))
