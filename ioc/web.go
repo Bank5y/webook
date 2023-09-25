@@ -9,11 +9,12 @@ import (
 	"webook/internal/web/middleware"
 )
 
-func InitGin(middlewares []gin.HandlerFunc, hdl *web.UserHandler) *gin.Engine {
+func InitGin(middlewares []gin.HandlerFunc, hdl *web.UserHandler, oauth2WechatHandler *web.OAuthWechatHandler) *gin.Engine {
 	engine := gin.Default()
 	//初始化中间件
 	engine.Use(middlewares...)
 	hdl.RegisterRouter(engine)
+	oauth2WechatHandler.RegisterRoutes(engine)
 	return engine
 }
 
@@ -24,7 +25,10 @@ func InitMiddlewares(redisClient redis.Cmdable) []gin.HandlerFunc {
 			Ignore("/users/login").
 			Ignore("/users/login_sms/code/send").
 			Ignore("/users/lo gin_sms").
+			Ignore("/oath2/wechat/authurl").
+			Ignore("/oath2/wechat/callback").
 			Ignore("/users/signup").
+			Ignore("/users/refresh_token").
 			Build(),
 		sessions.Sessions("mySessions",
 			memstore.NewStore(

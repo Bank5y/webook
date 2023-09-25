@@ -17,11 +17,11 @@ type Service struct {
 func NewService(appId string, signName string, client *sms.Client) *Service {
 	return &Service{appId: &appId, signName: &signName, client: client}
 }
-func (svc *Service) Send(ctx context.Context, tplId string, args []string, number ...string) error {
+func (svc *Service) Send(ctx context.Context, biz string, args []string, number ...string) error {
 	req := sms.NewSendSmsRequest()
 	req.SmsSdkAppId = svc.appId
 	req.SignName = svc.signName
-	req.TemplateId = ekit.ToPtr[string](tplId)
+	req.TemplateId = ekit.ToPtr[string](biz)
 	req.PhoneNumberSet = svc.toStringPtrSlice(number)
 	req.TemplateParamSet = svc.toStringPtrSlice(args)
 	resp, err := svc.client.SendSms(req)

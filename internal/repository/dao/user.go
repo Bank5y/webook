@@ -66,6 +66,12 @@ func (u *UserDAO) Update(ctx context.Context, user User) error {
 	return u.db.WithContext(ctx).Where("email=?", user.Email).Save(&user).Error
 }
 
+func (u *UserDAO) FindByWechat(ctx context.Context, openId string) (User, error) {
+	var result User
+	err := u.db.WithContext(ctx).Where("wechat_open_id=?", openId).First(&result).Error
+	return result, err
+}
+
 // User 直接对应数据库表
 type User struct {
 	Id       int            `gorm:"primaryKey,autoIncrement"`
@@ -73,6 +79,10 @@ type User struct {
 	Password string
 	//允许多个空值的唯一索引
 	Phone sql.NullString `gorm:"unique"`
+
+	//微信的字段
+	WechatUnionID sql.NullString `gorm:"unique"`
+	WechatOpenID  sql.NullString `gorm:"unique"`
 
 	//Create time ms
 	Ctime int64

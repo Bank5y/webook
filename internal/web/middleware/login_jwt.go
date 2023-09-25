@@ -1,21 +1,24 @@
 package middleware
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/redis/go-redis/v9"
 	"net/http"
-	"strings"
-	"time"
 	"webook/internal/web"
+	"webook/internal/web/ijwt"
 )
 
 // LoginJWTMiddlewareBuilder JWT 登录校验
 type LoginJWTMiddlewareBuilder struct {
-	paths []string
+	paths   []string
+	cmd     redis.Cmdable
+	handler ijwt.Handler
 }
 
-func NewLoginJWTMiddlewareBuilder() *LoginJWTMiddlewareBuilder {
-	return &LoginJWTMiddlewareBuilder{}
+func NewLoginJWTMiddlewareBuilder(cmd redis.Cmdable, handler ijwt.Handler) *LoginJWTMiddlewareBuilder {
+	return &LoginJWTMiddlewareBuilder{cmd: cmd, handler: handler}
 }
 
 func (l *LoginJWTMiddlewareBuilder) Ignore(path string) *LoginJWTMiddlewareBuilder {
@@ -30,20 +33,11 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 				return
 			}
 		}
-		tokenHeader := ctx.GetHeader("Authorization")
-		if tokenHeader == "" {
-			ctx.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
-		tokens := strings.Split(tokenHeader, " ")
-		if len(tokens) != 2 {
-			ctx.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
 
-		//jwt token处理
-		tokenStr := tokens[1]
-		claims := &web.UserClaims{}
+		//jwt验证
+		tokenStr := l.handler.ExtractToken(ctx)
+
+		claims := &ijwt.UserClaims{}
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 			return []byte(web.JwtTokenKey), nil
 		})
@@ -62,17 +56,13 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+		cnt, err := l.cmd.Exists(ctx, fmt.Sprintf("users:uuid:%s", claims.Ssid)).Result()
+		if err != nil || cnt > 0 {
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
 
-		//jwt token 刷新
-		now := time.Now()
-		if claims.ExpiresAt.Sub(now) < time.Second*50 {
-			claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute))
-			tokenStr, err = token.SignedString([]byte("tbkykLFqpai8IwdLt9N20HfAsFZoK1uA"))
-			if err != nil {
-				//处理错误
-			}
-			ctx.Header("X-jwt-token", tokenStr)
 		}
+
 		ctx.Set("claims", claims)
 	}
 }

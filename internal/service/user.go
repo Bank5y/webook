@@ -14,10 +14,27 @@ type UserService interface {
 	FindOrCreate(ctx context.Context, u domain.User) (domain.User, error)
 	EditUserPassword(ctx context.Context, u domain.User) error
 	Profile(ctx context.Context, u domain.User) (domain.User, error)
+	FindOrCreateByWechat(ctx context.Context, info domain.WechatInfo) (domain.User, error)
 }
 
 type UserDevService struct {
 	repo repository.UserRepository
+}
+
+func (svc *UserDevService) FindOrCreateByWechat(ctx context.Context, info domain.WechatInfo) (domain.User, error) {
+	//快路径
+	uResult, err := svc.repo.FindByWechat(ctx, info.OpenID)
+	if err != ErrUserNotFind {
+		return uResult, err
+	}
+	err = svc.repo.Create(ctx, domain.User{
+		WechatInfo: info,
+	})
+	if err != nil {
+		return domain.User{}, err
+	}
+	user, err := svc.repo.FindByWechat(ctx, info.OpenID)
+	return user, err
 }
 
 var (

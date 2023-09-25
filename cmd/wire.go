@@ -9,7 +9,9 @@ import (
 	"webook/internal/repository/cache"
 	"webook/internal/repository/dao"
 	"webook/internal/service"
+	"webook/internal/service/oauth2/wechat"
 	"webook/internal/web"
+	"webook/internal/web/ijwt"
 	"webook/ioc"
 )
 
@@ -26,14 +28,18 @@ func InitWebServer() *gin.Engine {
 			wire.Bind(new(repository.UserRepository), new(*repository.UserCacheRepository)),
 		),
 		//service
-		wire.NewSet(service.NewCodeDevService, service.NewUserDevService,
+		wire.NewSet(service.NewCodeDevService, service.NewUserDevService, ioc.InitWechatService,
 			//绑定service接口
+			wire.Bind(new(wechat.Service), new(*wechat.DevService)),
 			wire.Bind(new(service.CodeService), new(*service.CodeDevService)),
 			wire.Bind(new(service.UserService), new(*service.UserDevService)),
 		),
 		ioc.InitSMSService,
 		//web
-		web.NewUserHandler, ioc.InitGin, ioc.InitMiddlewares,
+		ioc.InitGin, ioc.InitMiddlewares, web.NewOAuthWechatHandler,
+		wire.NewSet(web.NewUserHandler, ijwt.NewRedisJwt,
+			wire.Bind(new(ijwt.Handler), new(*ijwt.RedisJwt)),
+		),
 	)
 	return new(gin.Engine)
 }
