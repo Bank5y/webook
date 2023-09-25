@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"webook/internal/web"
+	"webook/internal/web/ijwt"
 	"webook/internal/web/middleware"
 )
 
@@ -18,10 +19,10 @@ func InitGin(middlewares []gin.HandlerFunc, hdl *web.UserHandler, oauth2WechatHa
 	return engine
 }
 
-func InitMiddlewares(redisClient redis.Cmdable) []gin.HandlerFunc {
+func InitMiddlewares(redisClient redis.Cmdable, handler ijwt.Handler) []gin.HandlerFunc {
 	return []gin.HandlerFunc{
 		middleware.NewCrossMiddlewareBuilder().Build(),
-		middleware.NewLoginJWTMiddlewareBuilder().
+		middleware.NewLoginJWTMiddlewareBuilder(redisClient, handler).
 			Ignore("/users/login").
 			Ignore("/users/login_sms/code/send").
 			Ignore("/users/lo gin_sms").

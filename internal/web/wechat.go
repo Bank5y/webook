@@ -9,12 +9,13 @@ import (
 	"time"
 	"webook/internal/service"
 	"webook/internal/service/oauth2/wechat"
+	"webook/internal/web/ijwt"
 )
 
 type OAuthWechatHandler struct {
 	svc     wechat.Service
 	userSvc service.UserService
-	jwtHandler
+	ijwt.Handler
 	stateKey []byte
 }
 
@@ -102,7 +103,7 @@ func (o *OAuthWechatHandler) Callback(ctx *gin.Context) {
 	}
 	u, err := o.userSvc.FindOrCreateByWechat(ctx, info)
 
-	err = o.setLoginToken(ctx, u.Id)
+	err = o.SetLoginToken(ctx, u.Id)
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{
 			Code: "5",

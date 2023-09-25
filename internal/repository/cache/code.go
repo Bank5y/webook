@@ -53,16 +53,15 @@ func NewCodeLocalCache() CodeCache {
 func (c *CodeLocalCache) Set(ctx context.Context, biz, phone, code string) error {
 	key := biz + ":" + phone
 	lock.Lock()
+	defer lock.Unlock()
 	if localCode, ok := c.CacheMap[key]; ok {
 		now := time.Now().UnixMilli()
 		if (now - localCode.Ctime) < 60*1000 {
-			lock.Unlock()
 			return ErrCodeSendTooMany
 		}
 		var result LocalCode
 		result = c.CacheMap[key]
 		result.Ctime = now
-		lock.Unlock()
 		return nil
 	}
 	now := time.Now().UnixMilli()
@@ -72,25 +71,22 @@ func (c *CodeLocalCache) Set(ctx context.Context, biz, phone, code string) error
 		Ctime:    now,
 	}
 	c.CacheMap[key] = cache
-	lock.Unlock()
 	return nil
 }
 
 func (c *CodeLocalCache) Verify(ctx context.Context, biz, phone, code string) (bool, error) {
 	key := biz + ":" + phone
 	lock.Lock()
+	defer lock.Unlock()
 	if localCode, ok := c.CacheMap[key]; ok {
 		now := time.Now().UnixMilli()
 		if localCode.TryCount <= 0 || now-localCode.Ctime > 10*60*6000 {
 			delete(c.CacheMap, key)
-			lock.Unlock()
 			return false, nil
 		}
 		delete(c.CacheMap, key)
-		lock.Unlock()
 		return true, nil
 	}
-	lock.Unlock()
 	return false, nil
 }
 
