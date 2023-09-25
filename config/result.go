@@ -1,4 +1,4 @@
-package web
+package config
 
 type Result struct {
 	//业务错误码
